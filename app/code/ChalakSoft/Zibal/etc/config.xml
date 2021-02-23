@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Store/etc/config.xsd">
+    <default>
+        <payment>
+           <zibal>
+                <active>1</active>
+                <title>زیبال</title>
+                <merchant_id>zibal</merchant_id>
+                <order_status>pending</order_status>
+                <instructions>Instruction.</instructions>
+                <model>ChalakSoft\Zibal\Model\Zibal</model>
+                <group>offline</group>
+            </zibal>
+        </payment>
+    </default>
+</config>

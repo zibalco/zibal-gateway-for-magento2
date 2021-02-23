@@ -1,0 +1,15 @@
+<?php
+/**
+ ** @var $this \ChalakSoft\Zibal\Block\Redirect
+ */
+?>
+
+<h3>خطای رخ داد</h3>
+
+<?php
+try {
+    $this->send();
+}catch (Exception $e){
+    echo $e->getMessage();
+}
+?>

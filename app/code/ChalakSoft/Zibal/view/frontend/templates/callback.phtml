@@ -1,0 +1,17 @@
+<?php
+/**
+ ** @var $this \ChalakSoft\Zibal\Block\Redirect
+ */
+
+try {
+    $message = $this->back();
+}catch (Exception $e){
+    $message = $e->getMessage();
+}
+?>
+
+<div class="message">
+    <?= $message ?>
+</div>
+
+
