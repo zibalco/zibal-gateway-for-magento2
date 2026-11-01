@@ -2,49 +2,94 @@
 
 namespace ChalakSoft\Zibal\Helper;
 
+use ChalakSoft\Zibal\Model\Exception\GatewayException;
+use Magento\Framework\HTTP\Client\CurlFactory;
+use Psr\Log\LoggerInterface;
+
 class Zibal
 {
-    /** @var Data */
-    protected $helerData;
+    const API_URL = 'https://gateway.zibal.ir/v1/';
 
-    public function __construct(Data $helerData)
+    const START_URL = 'https://gateway.zibal.ir/start/';
+
+    /** Seconds to wait for the whole request */
+    const TIMEOUT = 20;
+
+    /** Seconds to wait for the TCP/TLS connection */
+    const CONNECT_TIMEOUT = 10;
+
+    /** @var Data */
+    protected $helperData;
+
+    /** @var CurlFactory */
+    protected $curlFactory;
+
+    /** @var LoggerInterface */
+    protected $logger;
+
+    public function __construct(Data $helperData, CurlFactory $curlFactory, LoggerInterface $logger)
     {
-        $this->helerData = $helerData;
+        $this->helperData = $helperData;
+        $this->curlFactory = $curlFactory;
+        $this->logger = $logger;
     }
 
     /**
-     * connects to zibal's rest api
+     * Calls Zibal's REST API
      *
-     * @param $path
-     * @param $parameters
+     * @param string $path
+     * @param array $parameters
+     * @param int|null $storeId
      *
-     * @return stdClass
+     * @return array decoded response, always containing a "result" key
+     *
+     * @throws GatewayException when the request fails or the response is not usable
      */
-    public function postToZibal($path, $parameters)
+    public function postToZibal($path, array $parameters, $storeId = null)
     {
-        $parameters['merchant'] = $this->helerData->getMerchantId();
+        $parameters['merchant'] = $this->helperData->getMerchantId($storeId);
 
-        $url = 'https://gateway.zibal.ir/v1/' . $path;
+        $url = static::API_URL . $path;
 
-        $ch = curl_init();
+        $curl = $this->curlFactory->create();
+        $curl->setTimeout(static::TIMEOUT);
+        $curl->setOption(CURLOPT_CONNECTTIMEOUT, static::CONNECT_TIMEOUT);
+        $curl->addHeader('Content-Type', 'application/json');
 
-        curl_setopt($ch, CURLOPT_URL, $url);
+        try {
+            $curl->post($url, json_encode($parameters));
+        } catch (\Exception $e) {
+            $this->logger->error('Zibal request failed', [
+                'path' => $path,
+                'error' => $e->getMessage(),
+            ]);
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-        ]);
+            throw new GatewayException(__('ارتباط با درگاه زیبال برقرار نشد.'), $e);
+        }
 
-        curl_setopt($ch, CURLOPT_POST, 1);
+        $body = (string)$curl->getBody();
+        $response = json_decode($body, true);
 
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($parameters));
+        if (!is_array($response) || !isset($response['result'])) {
+            $this->logger->error('Zibal returned an invalid response', [
+                'path' => $path,
+                'status' => $curl->getStatus(),
+                'body' => mb_substr($body, 0, 500),
+            ]);
 
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            throw new GatewayException(__('پاسخ نامعتبر از درگاه زیبال دریافت شد.'));
+        }
 
-        $response = curl_exec($ch);
+        return $response;
+    }
 
-        curl_close($ch);
-
-        return json_decode($response, true);
+    /**
+     * @param string $trackId
+     * @return string
+     */
+    public function getStartUrl($trackId)
+    {
+        return static::START_URL . rawurlencode((string)$trackId);
     }
 
     /**
@@ -52,7 +97,7 @@ class Zibal
      *
      * @param $code
      *
-     * @return String
+     * @return string
      */
     public function resultCodes($code)
     {
@@ -97,7 +142,7 @@ class Zibal
      *
      * @param $code
      *
-     * @return String
+     * @return string
      */
     public function statusCodes($code)
     {

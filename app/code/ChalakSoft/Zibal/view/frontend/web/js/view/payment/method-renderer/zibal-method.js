@@ -60,8 +60,8 @@ define(
                 return true;
             },
 
-            afterPlaceOrder: function (id) {
-                window.location.href = url.build('zibal/index/index') + '/?order_id=' + id;
+            afterPlaceOrder: function () {
+                window.location.href = url.build('zibal/index/index');
             },
 
         });

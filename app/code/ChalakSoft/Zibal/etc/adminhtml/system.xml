@@ -32,6 +32,7 @@
 
                 <field id="merchant_id" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>merchantID</label>
+                    <comment>تا این فیلد خالی باشد درگاه نمایش داده نمی‌شود. مقدار zibal مرچنت تستی است و پول واقعی دریافت نمی‌کند.</comment>
                 </field>
 
                 <field id="order_status" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">

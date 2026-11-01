@@ -3,7 +3,6 @@
 namespace ChalakSoft\Zibal\Helper;
 
 use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
 use Magento\Store\Model\ScopeInterface;
 
 class Data extends AbstractHelper
@@ -11,19 +10,23 @@ class Data extends AbstractHelper
     const BASE = 'payment/zibal/';
 
     /**
-     * @param Context $context
+     * @param int|null $storeId
+     * @return string
      */
-    public function __construct(Context $context)
+    public function getMerchantId($storeId = null)
     {
-        parent::__construct($context);
+        return trim((string)$this->getConfigValue('merchant_id', static::BASE, $storeId));
     }
 
     /**
-     * @return boolean
+     * Whether shop prices are entered in Toman (Zibal expects Rial).
+     *
+     * @param int|null $storeId
+     * @return bool
      */
-    public function getMerchantId()
+    public function useToman($storeId = null)
     {
-        return $this->getConfigValue('merchant_id', static::BASE);
+        return (bool)$this->getConfigValue('isirt', static::BASE, $storeId);
     }
 
     private function getConfigValue($code, $path, $storeId = null)
